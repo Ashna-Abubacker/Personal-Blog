@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="row">
+  {% include 'dashboard/sidebar.html' %}
+
+  <div class="col-md-9">
+    <h2>{{ user.username }}'s Profile</h2>
+
+    <!-- Profile Picture -->
+    <div class="mb-3">
+      {% if profile.profile_pic %}
+        <img src="{{ profile.profile_pic.url }}" class="rounded-circle" width="120" height="120" alt="Profile Picture">
+      {% else %}
+        <img src="{% static 'images/default.png' %}" class="rounded-circle" width="120" height="120" alt="Default Profile">
+      {% endif %}
+    </div>
+
+    <!-- User Info -->
+    <table class="table table-bordered">
+      <tr><th>Full Name</th><td>{{ user.first_name }} {{ user.last_name }}</td></tr>
+      <tr><th>Email</th><td>{{ user.email }}</td></tr>
+      <tr><th>Bio</th><td>{{ profile.bio|default:"No bio added yet." }}</td></tr>
+      <tr><th>Joined</th><td>{{ user.date_joined|date:"Y-m-d H:i" }}</td></tr>
+    </table>
+
+    <!-- Action Buttons -->
+    
+    {% if not user.is_superuser %}
+    <a href="{% url 'dashboard:edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+    <a href="{% url 'dashboard:change_password' %}" class="btn btn-warning">Change Password</a>
+
+    <form method="post" action="{% url 'dashboard:delete_account' %}" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger"
+        onclick="return confirm('Are you sure you want to delete your account?');">
+        Delete Account
+      </button>
+    </form>
+    {% else %}
+    <a href="/admin/" class="btn btn-dark">Admin Panel</a>
+    {% endif %}
+
+
+    <!-- User's Posts -->
+    <hr>
+    <h4>Your Posts</h4>
+
+    {% if posts %}
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in posts %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ post.title }}</td>
+              <td>{{ post.created_at|date:"Y-m-d H:i" }}</td>
+              <td>
+                <a href="{% url 'dashboard:edit_post' post.id %}" class="btn btn-sm btn-outline-success">Edit</a>
+                <form action="{% url 'dashboard:delete_post' post.id %}" method="post" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this post?');">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted">You haven't posted anything yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
